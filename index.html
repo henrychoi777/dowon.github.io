@@ -66,12 +66,12 @@
         }
 
         .button-group {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr;
             gap: 15px;
         }
 
-        button {
+        a.btn-button, button.btn-button {
             padding: 15px 30px;
             font-size: 16px;
             border: none;
@@ -80,8 +80,11 @@
             font-weight: 600;
             transition: all 0.3s ease;
             text-decoration: none;
-            display: inline-block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 100%;
+            min-height: 50px;
         }
 
         .btn-brochure {
@@ -104,12 +107,42 @@
             box-shadow: 0 10px 20px rgba(245, 87, 108, 0.4);
         }
 
+        .btn-submission {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-submission:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.4);
+        }
+
         .footer {
             margin-top: 40px;
             padding-top: 20px;
             border-top: 1px solid #eee;
             font-size: 12px;
             color: #aaa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-link {
+            background: none;
+            border: none;
+            color: #ddd;
+            cursor: pointer;
+            font-size: 11px;
+            text-decoration: none;
+            transition: color 0.3s;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .admin-link:hover {
+            color: #999;
+            background: #f0f0f0;
         }
 
         @media (max-width: 480px) {
@@ -149,13 +182,15 @@
 
         <!-- 버튼 그룹 -->
         <div class="button-group">
-            <button class="btn-brochure" onclick="openBrochure()">📄 회사소개서</button>
-            <a href="/documents" class="btn-documents" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">📁 등록서류함</a>
+            <button class="btn-button btn-brochure" onclick="openBrochure()">📄 회사소개서</button>
+            <a href="/documents" class="btn-button btn-documents">📁 등록서류함</a>
+            <a href="/submissions" class="btn-button btn-submission">✍️ 서류제출하기</a>
         </div>
 
         <!-- 푸터 -->
         <div class="footer">
             <p>&copy; 2026 도원산업개발. All rights reserved.</p>
+            <a href="/admin" class="admin-link">🔐 관리자</a>
         </div>
     </div>
 

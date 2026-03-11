@@ -25,13 +25,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('.'));
-
 // 데이터 저장소 (실제로는 DB 사용 권장)
 const DATA_FILE = 'documents.json';
+const SUBMISSIONS_FILE = 'submissions.json';
 
 function loadDocuments() {
   if (fs.existsSync(DATA_FILE)) {
@@ -44,6 +40,17 @@ function saveDocuments(docs) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(docs, null, 2));
 }
 
+function loadSubmissions() {
+  if (fs.existsSync(SUBMISSIONS_FILE)) {
+    return JSON.parse(fs.readFileSync(SUBMISSIONS_FILE, 'utf-8'));
+  }
+  return [];
+}
+
+function saveSubmissions(subs) {
+  fs.writeFileSync(SUBMISSIONS_FILE, JSON.stringify(subs, null, 2));
+}
+
 // 메인 페이지
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -54,10 +61,20 @@ app.get('/documents', (req, res) => {
   res.sendFile(path.join(__dirname, 'documents.html'));
 });
 
+// 서류제출 페이지
+app.get('/submissions', (req, res) => {
+  res.sendFile(path.join(__dirname, 'submissions.html'));
+});
+
 // 관리자 페이지
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
+
+// Middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('.'));
 
 // 게시판 목록 조회 (파일명과 작성일만 반환)
 app.get('/api/documents', (req, res) => {
@@ -187,6 +204,97 @@ app.post('/api/admin/delete', (req, res) => {
   saveDocuments(docs);
 
   res.json({ success: true, message: '파일이 삭제되었습니다.' });
+});
+
+// 서류제출 API
+// 서류제출 조회
+app.get('/api/submissions', (req, res) => {
+  const subs = loadSubmissions();
+  const result = subs.map(sub => ({
+    id: sub.id,
+    submitterName: sub.submitterName,
+    submitterPhone: sub.submitterPhone,
+    submitterEmail: sub.submitterEmail,
+    submitterCompany: sub.submitterCompany,
+    submissionTitle: sub.submissionTitle,
+    submissionMessage: sub.submissionMessage,
+    submissionDate: sub.submissionDate,
+    fileName: sub.fileName
+  }));
+  res.json(result);
+});
+
+// 서류제출 생성
+app.post('/api/submissions/create', upload.single('file'), (req, res) => {
+  const { submitterName, submitterPhone, submitterEmail, submitterCompany, submissionTitle, submissionMessage } = req.body;
+
+  if (!submitterName || !submitterPhone || !submitterEmail || !submissionTitle) {
+    if (req.file) {
+      fs.unlinkSync(path.join(uploadDir, req.file.filename));
+    }
+    return res.json({ success: false, message: '필수 정보가 누락되었습니다.' });
+  }
+
+  const subs = loadSubmissions();
+  const newSubmission = {
+    id: Date.now().toString(),
+    submitterName: submitterName,
+    submitterPhone: submitterPhone,
+    submitterEmail: submitterEmail,
+    submitterCompany: submitterCompany || '',
+    submissionTitle: submissionTitle,
+    submissionMessage: submissionMessage || '',
+    submissionDate: new Date().toLocaleDateString('ko-KR'),
+    fileName: req.file ? req.file.filename : null
+  };
+
+  subs.push(newSubmission);
+  saveSubmissions(subs);
+
+  res.json({ success: true, message: '서류가 제출되었습니다.' });
+});
+
+// 관리자 - 서류제출 목록
+app.post('/api/admin/submissions', (req, res) => {
+  const adminPassword = '1234';
+
+  if (!req.body.adminPassword || req.body.adminPassword !== adminPassword) {
+    return res.json({ success: false, message: '관리자 인증 실패' });
+  }
+
+  const subs = loadSubmissions();
+  res.json({ success: true, submissions: subs });
+});
+
+// 관리자 - 서류제출 삭제
+app.post('/api/admin/submissions/delete', (req, res) => {
+  const { id, adminPassword } = req.body;
+  const ADMIN_PASSWORD = '1234';
+
+  if (adminPassword !== ADMIN_PASSWORD) {
+    return res.json({ success: false, message: '관리자 인증 실패' });
+  }
+
+  let subs = loadSubmissions();
+  const sub = subs.find(s => s.id === id);
+
+  if (!sub) {
+    return res.json({ success: false, message: '항목을 찾을 수 없습니다.' });
+  }
+
+  // 파일 삭제
+  if (sub.fileName) {
+    const filePath = path.join(uploadDir, sub.fileName);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
+
+  // 데이터에서 제거
+  subs = subs.filter(s => s.id !== id);
+  saveSubmissions(subs);
+
+  res.json({ success: true, message: '항목이 삭제되었습니다.' });
 });
 
 // 서버 시작

@@ -296,6 +296,7 @@
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('upload')">파일 업로드</button>
                 <button class="tab-btn" onclick="switchTab('manage')">서류 관리</button>
+                <button class="tab-btn" onclick="switchTab('submissions')">제출 현황</button>
                 <button class="tab-btn" onclick="logout()" style="margin-left: auto; color: #f5576c;">로그아웃</button>
             </div>
 
@@ -343,6 +344,14 @@
             <div id="manageTab" class="tab-content">
                 <h3 style="margin-bottom: 20px; color: #333;">등록된 서류</h3>
                 <div id="documentsList" style="overflow-x: auto;">
+                    <div class="empty-message">로딩 중...</div>
+                </div>
+            </div>
+
+            <!-- 제출 현황 탭 -->
+            <div id="submissionsTab" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: #333;">사용자 제출 현황</h3>
+                <div id="submissionsList" style="overflow-x: auto;">
                     <div class="empty-message">로딩 중...</div>
                 </div>
             </div>
@@ -413,6 +422,8 @@
 
             if (tab === 'manage') {
                 loadDocuments();
+            } else if (tab === 'submissions') {
+                loadSubmissions();
             }
         }
 
@@ -535,6 +546,90 @@
                 }
             } catch (error) {
                 console.error('Error deleting document:', error);
+                showMessage('삭제 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 제출 현황 로드
+        async function loadSubmissions() {
+            try {
+                const response = await fetch('/api/admin/submissions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminPassword })
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    showMessage(result.message, 'error');
+                    logout();
+                    return;
+                }
+
+                const subs = result.submissions;
+                const listContainer = document.getElementById('submissionsList');
+
+                if (subs.length === 0) {
+                    listContainer.innerHTML = '<div class="empty-message">제출된 서류가 없습니다.</div>';
+                    return;
+                }
+
+                listContainer.innerHTML = `
+                    <table class="documents-table">
+                        <thead>
+                            <tr>
+                                <th>작성자</th>
+                                <th>연락처</th>
+                                <th>제목</th>
+                                <th>날짜</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${subs.map(sub => `
+                                <tr>
+                                    <td>${sub.submitterName}</td>
+                                    <td>${sub.submitterPhone}</td>
+                                    <td>${sub.submissionTitle}</td>
+                                    <td>${sub.submissionDate}</td>
+                                    <td>
+                                        <button class="delete-btn" onclick="deleteSubmission('${sub.id}')">삭제</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                showMessage('제출 현황을 불러오는 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 제출 항목 삭제
+        async function deleteSubmission(id) {
+            if (!confirm('정말 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/submissions/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, adminPassword })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('항목이 삭제되었습니다.', 'success');
+                    loadSubmissions();
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting submission:', error);
                 showMessage('삭제 중 오류가 발생했습니다.', 'error');
             }
         }
