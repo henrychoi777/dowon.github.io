@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>도원산업개발</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 50px 30px;
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 30px;
+        }
+
+        .logo img {
+            width: 150px;
+            height: auto;
+            max-width: 100%;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .description {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 40px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .btn-brochure {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-brochure:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-documents {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-documents:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 40px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .description {
+                font-size: 14px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 로고 -->
+        <div class="logo">
+            <img src="./logo.png" alt="도원산업개발 로고">
+        </div>
+
+        <!-- 회사명 -->
+        <h1>도원산업개발</h1>
+        <p class="subtitle">건설폐기물·건설골재 납품운송 솔루션</p>
+
+        <!-- 회사소개 -->
+        <div class="description">
+            건설폐기물 수집운반허가업체로서 체계화 된 건설폐기물 처리와 건설골재 운송솔루션을 제공하며,
+            신뢰를 바탕으로 고객 만족을 최우선으로 하는 전문 기업입니다.
+            <br><br>
+            저희는 납기와 품질향상을 혁신 과제로 삼아, 귀사와의 동반성장을 추구합니다.
+        </div>
+
+        <!-- 버튼 그룹 -->
+        <div class="button-group">
+            <button class="btn-brochure" onclick="openBrochure()">📄 회사소개서</button>
+            <a href="/documents" class="btn-documents" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">📁 등록서류함</a>
+        </div>
+
+        <!-- 푸터 -->
+        <div class="footer">
+            <p>&copy; 2026 도원산업개발. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        function openBrochure() {
+            // PDF 파일 링크 - 실제 PDF 경로로 변경하세요
+            window.open('https://naver.me/52aqgAGw', '_blank');
+        }
+    </script>
+</body>
+</html>

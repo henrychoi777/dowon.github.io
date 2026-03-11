@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 - 도원산업개발</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .header-desc {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #5568d3;
+        }
+
+        .admin-login {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .admin-login.show {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #5568d3;
+        }
+
+        .admin-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .upload-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 2px dashed #667eea;
+        }
+
+        .upload-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .documents-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .documents-table th {
+            background: #f5f5f5;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .documents-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        .documents-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .delete-btn {
+            padding: 6px 12px;
+            background: #f5576c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: #e84453;
+        }
+
+        .message {
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .login-error {
+            color: #721c24;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .documents-table {
+                font-size: 12px;
+            }
+
+            .documents-table th,
+            .documents-table td {
+                padding: 8px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn">← 돌아가기</a>
+
+    <div class="container">
+        <div class="header">
+            <h1>🔐 관리자 페이지</h1>
+            <p class="header-desc">서류를 업로드하고 관리하세요.</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <!-- 로그인 폼 -->
+        <div id="adminLogin" class="admin-login show">
+            <form onsubmit="login(event)">
+                <h3 style="margin-bottom: 20px; color: #333;">관리자 인증</h3>
+                <div class="form-group">
+                    <label for="adminPwd">관리자 비밀번호</label>
+                    <input 
+                        type="password" 
+                        id="adminPwd" 
+                        required
+                        placeholder="관리자 비밀번호 입력"
+                    >
+                    <div id="loginError" class="login-error"></div>
+                </div>
+                <button type="submit" class="submit-btn">로그인</button>
+            </form>
+        </div>
+
+        <!-- 관리자 패널 -->
+        <div id="adminPanel" class="admin-panel" style="display: none;">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('upload')">파일 업로드</button>
+                <button class="tab-btn" onclick="switchTab('manage')">서류 관리</button>
+                <button class="tab-btn" onclick="logout()" style="margin-left: auto; color: #f5576c;">로그아웃</button>
+            </div>
+
+            <!-- 업로드 탭 -->
+            <div id="uploadTab" class="tab-content active">
+                <div class="upload-section">
+                    <h3>새 서류 업로드</h3>
+                    <form onsubmit="uploadFile(event)">
+                        <div class="form-group">
+                            <label for="fileTitle">서류 제목</label>
+                            <input 
+                                type="text" 
+                                id="fileTitle" 
+                                required
+                                placeholder="예: 2024년 사업자등록증"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="filePassword">비밀번호 (4자리 숫자)</label>
+                            <input 
+                                type="text" 
+                                id="filePassword" 
+                                required
+                                maxlength="4"
+                                pattern="[0-9]{4}"
+                                placeholder="0000"
+                                inputmode="numeric"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="fileInput">파일 선택 (PDF, JPG, PNG 등)</label>
+                            <input 
+                                type="file" 
+                                id="fileInput" 
+                                required
+                                accept=".pdf,.jpg,.jpeg,.png,.gif,.zip,.doc,.docx,.xls,.xlsx"
+                            >
+                        </div>
+                        <button type="submit" class="submit-btn">업로드</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 관리 탭 -->
+            <div id="manageTab" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: #333;">등록된 서류</h3>
+                <div id="documentsList" style="overflow-x: auto;">
+                    <div class="empty-message">로딩 중...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let adminPassword = null;
+
+        function login(event) {
+            event.preventDefault();
+            adminPassword = document.getElementById('adminPwd').value;
+
+            if (!adminPassword) {
+                showError('비밀번호를 입력해주세요.', 'loginError');
+                return;
+            }
+
+            // 간단한 검증 (실제로는 서버에서 검증)
+            // 비밀번호가 1234라고 가정
+            if (adminPassword !== '1234') {
+                showError('비밀번호가 틀렸습니다.', 'loginError');
+                return;
+            }
+
+            // 로그인 성공
+            document.getElementById('adminLogin').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            loadDocuments();
+        }
+
+        function logout() {
+            adminPassword = null;
+            document.getElementById('adminLogin').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('adminPwd').value = '';
+            document.getElementById('loginError').textContent = '';
+        }
+
+        function showError(text, elementId = 'message') {
+            if (elementId === 'loginError') {
+                document.getElementById(elementId).textContent = text;
+            } else {
+                const messageDiv = document.getElementById(elementId);
+                messageDiv.textContent = text;
+                messageDiv.className = 'message error';
+                setTimeout(() => {
+                    messageDiv.className = 'message';
+                }, 5000);
+            }
+        }
+
+        function showMessage(text, type = 'success') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            setTimeout(() => {
+                messageDiv.className = 'message';
+            }, 5000);
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tab + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+
+            if (tab === 'manage') {
+                loadDocuments();
+            }
+        }
+
+        async function uploadFile(event) {
+            event.preventDefault();
+
+            const title = document.getElementById('fileTitle').value;
+            const password = document.getElementById('filePassword').value;
+            const fileInput = document.getElementById('fileInput');
+
+            if (!/^\d{4}$/.test(password)) {
+                showMessage('비밀번호는 4자리 숫자여야 합니다.', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('password', password);
+            formData.append('adminPassword', adminPassword);
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/api/admin/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('파일이 성공적으로 업로드되었습니다.', 'success');
+                    document.getElementById('fileTitle').value = '';
+                    document.getElementById('filePassword').value = '';
+                    fileInput.value = '';
+                    loadDocuments();
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                showMessage('업로드 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        async function loadDocuments() {
+            try {
+                const response = await fetch('/api/admin/documents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminPassword })
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    showMessage(result.message, 'error');
+                    logout();
+                    return;
+                }
+
+                const docs = result.documents;
+                const listContainer = document.getElementById('documentsList');
+
+                if (docs.length === 0) {
+                    listContainer.innerHTML = '<div class="empty-message">등록된 서류가 없습니다.</div>';
+                    return;
+                }
+
+                listContainer.innerHTML = `
+                    <table class="documents-table">
+                        <thead>
+                            <tr>
+                                <th>제목</th>
+                                <th>파일명</th>
+                                <th>비밀번호</th>
+                                <th>업로드 날짜</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${docs.map(doc => `
+                                <tr>
+                                    <td>${doc.title}</td>
+                                    <td>${doc.fileName.split('-')[1] || doc.fileName}</td>
+                                    <td><code>${doc.password}</code></td>
+                                    <td>${doc.uploadDate}</td>
+                                    <td>
+                                        <button class="delete-btn" onclick="deleteDocument('${doc.id}')">삭제</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                showMessage('서류를 불러오는 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        async function deleteDocument(id) {
+            if (!confirm('정말 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, adminPassword })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('파일이 삭제되었습니다.', 'success');
+                    loadDocuments();
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting document:', error);
+                showMessage('삭제 중 오류가 발생했습니다.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
