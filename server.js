@@ -3,9 +3,17 @@ const multer = require('multer');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+// Supabase 클라이언트 초기화
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 // 업로드 폴더 생성
 const uploadDir = 'uploads';
@@ -208,66 +216,132 @@ app.post('/api/admin/delete', (req, res) => {
 
 // 서류제출 API
 // 서류제출 조회
-app.get('/api/submissions', (req, res) => {
-  const subs = loadSubmissions();
-  const result = subs.map(sub => ({
-    id: sub.id,
-    submitterName: sub.submitterName,
-    submitterPhone: sub.submitterPhone,
-    submitterEmail: sub.submitterEmail,
-    submitterCompany: sub.submitterCompany,
-    submissionTitle: sub.submissionTitle,
-    submissionMessage: sub.submissionMessage,
-    submissionDate: sub.submissionDate,
-    fileName: sub.fileName
-  }));
-  res.json(result);
+app.get('/api/submissions', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('submissions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const result = data.map(sub => ({
+      id: sub.id,
+      submitterName: sub.submitter_name,
+      submitterPhone: sub.submitter_phone,
+      submitterEmail: sub.submitter_email,
+      submitterCompany: sub.submitter_company,
+      submissionTitle: sub.submission_title,
+      submissionMessage: sub.submission_message,
+      submissionDate: new Date(sub.created_at).toLocaleDateString('ko-KR'),
+      fileName: sub.file_name
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching submissions:', error);
+    res.json([]);
+  }
 });
 
 // 서류제출 생성
-app.post('/api/submissions/create', upload.single('file'), (req, res) => {
-  const { submitterName, submitterPhone, submitterEmail, submitterCompany, submissionTitle, submissionMessage } = req.body;
+app.post('/api/submissions/create', upload.single('file'), async (req, res) => {
+  try {
+    const { submitterName, submitterPhone, submitterEmail, submitterCompany, submissionTitle, submissionMessage } = req.body;
 
-  if (!submitterName || !submitterPhone || !submitterEmail || !submissionTitle) {
-    if (req.file) {
-      fs.unlinkSync(path.join(uploadDir, req.file.filename));
+    if (!submitterName || !submitterPhone || !submitterEmail || !submissionTitle) {
+      if (req.file) {
+        fs.unlinkSync(path.join(uploadDir, req.file.filename));
+      }
+      return res.json({ success: false, message: '필수 정보가 누락되었습니다.' });
     }
-    return res.json({ success: false, message: '필수 정보가 누락되었습니다.' });
+
+    let fileUrl = null;
+    let fileName = null;
+
+    if (req.file) {
+      fileName = req.file.filename;
+      // 파일을 Supabase Storage에 업로드
+      const fileContent = fs.readFileSync(path.join(uploadDir, fileName));
+      const { data: fileData, error: fileError } = await supabase.storage
+        .from('submissions')
+        .upload(`${Date.now()}-${req.file.originalname}`, fileContent);
+
+      if (fileError) {
+        console.error('File upload error:', fileError);
+      } else {
+        const { data: urlData } = supabase.storage
+          .from('submissions')
+          .getPublicUrl(fileData.path);
+        fileUrl = urlData.publicUrl;
+      }
+
+      // 로컬 파일 삭제
+      fs.unlinkSync(path.join(uploadDir, fileName));
+    }
+
+    const { data, error } = await supabase
+      .from('submissions')
+      .insert([
+        {
+          submitter_name: submitterName,
+          submitter_phone: submitterPhone,
+          submitter_email: submitterEmail,
+          submitter_company: submitterCompany || null,
+          submission_title: submissionTitle,
+          submission_message: submissionMessage || null,
+          file_url: fileUrl,
+          file_name: req.file ? req.file.originalname : null
+        }
+      ]);
+
+    if (error) throw error;
+
+    res.json({ success: true, message: '서류가 제출되었습니다.' });
+  } catch (error) {
+    console.error('Error creating submission:', error);
+    res.json({ success: false, message: '제출 중 오류가 발생했습니다.' });
   }
-
-  const subs = loadSubmissions();
-  const newSubmission = {
-    id: Date.now().toString(),
-    submitterName: submitterName,
-    submitterPhone: submitterPhone,
-    submitterEmail: submitterEmail,
-    submitterCompany: submitterCompany || '',
-    submissionTitle: submissionTitle,
-    submissionMessage: submissionMessage || '',
-    submissionDate: new Date().toLocaleDateString('ko-KR'),
-    fileName: req.file ? req.file.filename : null
-  };
-
-  subs.push(newSubmission);
-  saveSubmissions(subs);
-
-  res.json({ success: true, message: '서류가 제출되었습니다.' });
 });
 
 // 관리자 - 서류제출 목록
-app.post('/api/admin/submissions', (req, res) => {
+app.post('/api/admin/submissions', async (req, res) => {
   const adminPassword = '1234';
 
   if (!req.body.adminPassword || req.body.adminPassword !== adminPassword) {
     return res.json({ success: false, message: '관리자 인증 실패' });
   }
 
-  const subs = loadSubmissions();
-  res.json({ success: true, submissions: subs });
+  try {
+    const { data, error } = await supabase
+      .from('submissions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const submissions = data.map(sub => ({
+      id: sub.id,
+      submitterName: sub.submitter_name,
+      submitterPhone: sub.submitter_phone,
+      submitterEmail: sub.submitter_email,
+      submitterCompany: sub.submitter_company,
+      submissionTitle: sub.submission_title,
+      submissionMessage: sub.submission_message,
+      submissionDate: new Date(sub.created_at).toLocaleDateString('ko-KR'),
+      fileName: sub.file_name,
+      fileUrl: sub.file_url
+    }));
+
+    res.json({ success: true, submissions });
+  } catch (error) {
+    console.error('Error fetching admin submissions:', error);
+    res.json({ success: false, message: '데이터 조회 실패' });
+  }
 });
 
 // 관리자 - 서류제출 삭제
-app.post('/api/admin/submissions/delete', (req, res) => {
+app.post('/api/admin/submissions/delete', async (req, res) => {
   const { id, adminPassword } = req.body;
   const ADMIN_PASSWORD = '1234';
 
@@ -275,26 +349,36 @@ app.post('/api/admin/submissions/delete', (req, res) => {
     return res.json({ success: false, message: '관리자 인증 실패' });
   }
 
-  let subs = loadSubmissions();
-  const sub = subs.find(s => s.id === id);
+  try {
+    const { data: submission, error: fetchError } = await supabase
+      .from('submissions')
+      .select('file_url')
+      .eq('id', id)
+      .single();
 
-  if (!sub) {
-    return res.json({ success: false, message: '항목을 찾을 수 없습니다.' });
-  }
+    if (fetchError) throw fetchError;
 
-  // 파일 삭제
-  if (sub.fileName) {
-    const filePath = path.join(uploadDir, sub.fileName);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    // 파일 삭제
+    if (submission && submission.file_url) {
+      const fileName = submission.file_url.split('/').pop();
+      await supabase.storage
+        .from('submissions')
+        .remove([fileName]);
     }
+
+    // 데이터 삭제
+    const { error: deleteError } = await supabase
+      .from('submissions')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) throw deleteError;
+
+    res.json({ success: true, message: '항목이 삭제되었습니다.' });
+  } catch (error) {
+    console.error('Error deleting submission:', error);
+    res.json({ success: false, message: '삭제 중 오류가 발생했습니다.' });
   }
-
-  // 데이터에서 제거
-  subs = subs.filter(s => s.id !== id);
-  saveSubmissions(subs);
-
-  res.json({ success: true, message: '항목이 삭제되었습니다.' });
 });
 
 // 서버 시작
